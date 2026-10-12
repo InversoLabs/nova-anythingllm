@@ -11,6 +11,9 @@ export default function SkillSection({
   indented = false,
   highlighted = false,
   children,
+  groupEnabled,
+  groupBusy = false,
+  onGroupToggle,
 }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -24,33 +27,46 @@ export default function SkillSection({
 
   return (
     <div className={indented ? "ml-3" : ""}>
-      <button
-        ref={ref}
-        type="button"
-        className={headerClasses}
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-1.5">
-          <CaretDown
-            size={10}
-            weight="bold"
-            className={`text-zinc-400 light:text-slate-500 transition-transform duration-150 ${
-              expanded ? "" : "-rotate-90"
-            }`}
+      <div className="flex items-center">
+        {onGroupToggle && (
+          <input
+            type="checkbox"
+            checked={groupEnabled}
+            disabled={groupBusy}
+            aria-label={"Enable or disable " + name + " tool group"}
+            title="Disable group; re-enable to restore individual selections"
+            onChange={onGroupToggle}
+            className="ml-2 mr-1 accent-emerald-300"
           />
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400 light:text-slate-500">
-            {name}
-          </span>
-          {isMcp && (
-            <span className="text-[8px] px-1 py-px rounded bg-zinc-600/50 light:bg-slate-200 text-zinc-300 light:text-slate-500 font-medium leading-tight">
-              MCP
+        )}
+        <button
+          ref={ref}
+          type="button"
+          className={headerClasses}
+          onClick={onToggle}
+        >
+          <div className="flex items-center gap-1.5">
+            <CaretDown
+              size={10}
+              weight="bold"
+              className={`text-zinc-400 light:text-slate-500 transition-transform duration-150 ${
+                expanded ? "" : "-rotate-90"
+              }`}
+            />
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400 light:text-slate-500">
+              {name}
             </span>
-          )}
-        </div>
-        <span className="text-[10px] text-zinc-500 light:text-slate-400 tabular-nums">
-          {enabledCount}/{totalCount}
-        </span>
-      </button>
+            {isMcp && (
+              <span className="text-[8px] px-1 py-px rounded bg-zinc-600/50 light:bg-slate-200 text-zinc-300 light:text-slate-500 font-medium leading-tight">
+                MCP
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-zinc-500 light:text-slate-400 tabular-nums">
+            {enabledCount}/{totalCount}
+          </span>
+        </button>
+      </div>
       {expanded && <div className="pl-3">{children}</div>}
     </div>
   );

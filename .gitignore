@@ -10,3 +10,13 @@ aws_cf_deploy_anything_llm.json
 yarn.lock
 *.bak
 .idea
+
+# NOVA runtime/private state
+novalabs/node_modules/
+*.db
+*.db-*
+*.sqlite*
+nova-compaction/
+checkpoints/
+*.asar
+*.log

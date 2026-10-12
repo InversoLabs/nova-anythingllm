@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { readGroup, toggleGroup } from "./groupToggle.mjs";
+import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import paths from "@/utils/paths";
@@ -81,6 +82,39 @@ export default function AgentSkillsTab({
     toggleMcpTool,
     disabledSubSkills,
   });
+
+  const sectionsRef = useRef(sections);
+  sectionsRef.current = sections;
+  const [groupBusy, setGroupBusy] = useState(null);
+  const [groupError, setGroupError] = useState("");
+  const [, setGroupRevision] = useState(0);
+  const groupKey = (id) =>
+    "nova-tools:" + (workspace?.slug || "default") + ":" + id;
+  const groupDisabled = (id) =>
+    readGroup(localStorage, groupKey(id))?.disabled === true;
+  async function toggleSectionTools(id) {
+    if (groupBusy) return;
+    setGroupBusy(id);
+    setGroupError("");
+    try {
+      await toggleGroup({
+        storage: localStorage,
+        key: groupKey(id),
+        getItems: () =>
+          sectionsRef.current.find((s) => s.id === id)?.items || [],
+        afterToggle: () =>
+          new Promise((resolve) => requestAnimationFrame(resolve)),
+      });
+    } catch (error) {
+      setGroupError(
+        "Group update interrupted. Toggle it again to restore the saved selections."
+      );
+      console.error(error);
+    } finally {
+      setGroupBusy(null);
+      setGroupRevision((x) => x + 1);
+    }
+  }
 
   // Section expansion helpers
   function isSectionExpanded(sectionId) {
@@ -172,6 +206,13 @@ export default function AgentSkillsTab({
     highlightedIndex,
     onSelect: (item) => {
       if (item.type === "header") return item.onToggle();
+      const section = sections.find((s) =>
+        s.items.some(
+          (i) =>
+            i.id === item.id || i.subSkills?.some((sub) => sub.id === item.id)
+        )
+      );
+      if (groupBusy || groupDisabled(section?.id)) return;
       item.onToggle();
     },
     registerItemCount,
@@ -193,10 +234,18 @@ export default function AgentSkillsTab({
           placeholder={t("common.search")}
         />
       )}
+      {groupError && (
+        <p role="alert" className="text-xs text-red-400">
+          {groupError}
+        </p>
+      )}
       {filteredSections.map((section) => (
         <SkillSection
           key={section.id}
           name={section.name}
+          groupEnabled={!groupDisabled(section.id)}
+          groupBusy={!!groupBusy}
+          onGroupToggle={() => toggleSectionTools(section.id)}
           expanded={isSectionExpanded(section.id)}
           onToggle={() => toggleSection(section.id)}
           enabledCount={section.enabledCount}
@@ -209,6 +258,7 @@ export default function AgentSkillsTab({
               <SkillRow
                 name={item.name}
                 enabled={item.enabled}
+                disabled={!!groupBusy || groupDisabled(section.id)}
                 onToggle={item.onToggle}
                 highlighted={highlightedIndex === flatIndexMap[item.id]}
               />
@@ -233,7 +283,11 @@ export default function AgentSkillsTab({
                       highlighted={
                         highlightedIndex === flatIndexMap[subItem.id]
                       }
-                      disabled={!subItem.parentEnabled}
+                      disabled={
+                        !subItem.parentEnabled ||
+                        !!groupBusy ||
+                        groupDisabled(section.id)
+                      }
                     />
                   ))}
                 </SkillSection>

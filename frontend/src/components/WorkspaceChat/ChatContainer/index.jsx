@@ -1,3 +1,4 @@
+import "@/nova-containment.css";
 import { useState, useEffect, useContext, useRef, useCallback } from "react";
 import ChatHistory from "./ChatHistory";
 import { CLEAR_ATTACHMENTS_EVENT, DndUploaderContext } from "./DnDWrapper";
@@ -71,13 +72,23 @@ export default function ChatContainer({
     const chatEl = document.getElementById("chat-history");
     if (!wrapper || !chatEl) return;
 
-    const observer = new ResizeObserver(([entry]) => {
-      const inputHeight =
-        entry.borderBoxSize?.[0]?.blockSize ?? entry.target.offsetHeight;
-      chatEl.style.paddingBottom = `${inputHeight}px`;
-    });
+    const update = () => {
+      const parentBottom =
+        wrapper.offsetParent?.getBoundingClientRect().bottom ??
+        window.innerHeight;
+      const lift = Math.max(0, parentBottom - window.innerHeight) + 12;
+      wrapper.style.bottom = lift + "px";
+      chatEl.style.paddingBottom =
+        wrapper.getBoundingClientRect().height + lift + 24 + "px";
+    };
+    const observer = new ResizeObserver(update);
     observer.observe(wrapper);
-    return () => observer.disconnect();
+    window.addEventListener("resize", update);
+    update();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
   }, [isEmpty]);
 
   const { listening, resetTranscript } = useSpeechRecognition({

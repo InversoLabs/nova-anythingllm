@@ -1,0 +1,38 @@
+#prompt-input-wrapper,
+#prompt-input-wrapper form,
+#prompt-input-wrapper form > div {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+#chat-history {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+}
+#chat-history *,
+#chat-history .not-prose {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+#chat-history pre,
+#chat-history table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+#chat-history button[aria-controls] {
+  max-width: 100%;
+  align-items: flex-start;
+}
+#chat-history button[aria-controls] > .truncate {
+  flex: 1 1 0%;
+  width: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  text-align: left;
+}

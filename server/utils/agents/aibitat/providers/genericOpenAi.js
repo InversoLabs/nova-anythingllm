@@ -128,18 +128,18 @@ class GenericOpenAiProvider extends InheritMultiple([Provider, UnTooled]) {
     );
 
     try {
-      return await tooledStream(
+      return await require("../../nova/runtime.cjs").stream(this, callback => tooledStream(
         this.client,
         this.model,
         messages,
         functions,
-        eventHandler,
+        callback,
         {
           provider: this,
           maxTokens: this.maxTokens,
           maxTokensKey: GenericOpenAiLLM.maxTokensKey(),
         }
-      );
+      ), eventHandler, functions);
     } catch (error) {
       console.error(error.message, error);
       if (error instanceof OpenAI.AuthenticationError) throw error;
@@ -188,7 +188,7 @@ class GenericOpenAiProvider extends InheritMultiple([Provider, UnTooled]) {
         return this.complete([...messages, result.retryWithError], functions);
       }
 
-      return result;
+      return require("../../nova/runtime.cjs").complete(this, result, functions);
     } catch (error) {
       if (error instanceof OpenAI.AuthenticationError) throw error;
       if (

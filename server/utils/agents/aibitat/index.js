@@ -1032,6 +1032,7 @@ https://docs.anythingllm.com/agent/intelligent-tool-selection
   ) {
     // Bail before any (further) LLM calls when the session was aborted mid-execution.
     if (this._aborted) return null;
+    messages = await require("../nova/runtime.cjs").prepare(messages, functions, depth, this.providerInstance, message => this?.introspect?.(message));
     const eventHandler = (type, data) => {
       this?.socket?.send(type, data);
     };
@@ -1056,7 +1057,7 @@ https://docs.anythingllm.com/agent/intelligent-tool-selection
     if (completionStream.functionCall) {
       const { name, arguments: args } = completionStream.functionCall;
       const fn = this.functions.get(name);
-      const reachedToolLimit = depth >= this.maxToolCalls;
+      const reachedToolLimit = depth >= (this.providerInstance.novaProjectLimit || this.maxToolCalls);
 
       if (reachedToolLimit) {
         this.handlerProps?.log?.(
@@ -1197,6 +1198,7 @@ https://docs.anythingllm.com/agent/intelligent-tool-selection
   ) {
     // Bail before any (further) LLM calls when the session was aborted mid-execution.
     if (this._aborted) return null;
+    messages = await require("../nova/runtime.cjs").prepare(messages, functions, depth, this.providerInstance, message => this?.introspect?.(message));
     // Create a stable UUID at the start of execution for event correlation
     if (!msgUUID) msgUUID = v4();
     const eventHandler = (type, data) => {
@@ -1223,7 +1225,7 @@ https://docs.anythingllm.com/agent/intelligent-tool-selection
     if (completion.functionCall) {
       const { name, arguments: args } = completion.functionCall;
       const fn = this.functions.get(name);
-      const reachedToolLimit = depth >= this.maxToolCalls;
+      const reachedToolLimit = depth >= (this.providerInstance.novaProjectLimit || this.maxToolCalls);
 
       if (reachedToolLimit) {
         this.handlerProps?.log?.(
